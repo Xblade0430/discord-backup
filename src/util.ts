@@ -96,18 +96,24 @@ export async function fetchTextChannelData(channel: TextChannel | NewsChannel, o
                         fetchComplete = true;
                         return;
                     }
-                    const files = await Promise.all(msg.attachments.map(async (a) => {
-                        let attach = a.url
-                        if (a.url && ['png', 'jpg', 'jpeg', 'jpe', 'jif', 'jfif', 'jfi'].includes(a.url)) {
-                            if (options.saveImages && options.saveImages === 'base64') {
-                                attach = (await (nodeFetch(a.url).then((res) => res.buffer()))).toString('base64')
+                    const files = await Promise.all(
+                        msg.attachments.map(async (a) => {
+                            let attach = a.url;
+                            const extensions = ['.png', '.jpg', '.jpeg', '.jpe', '.jif', '.jfif', '.jfi'];
+                            if (
+                                a.url &&
+                                extensions.some((ext) => a.url.toLowerCase().endsWith(ext)) &&
+                                options.saveImages &&
+                                options.saveImages === 'base64'
+                            ) {
+                                attach = (await nodeFetch(a.url).then((res) => res.buffer())).toString('base64');
                             }
-                        }
-                        return {
-                            name: a.name,
-                            attachment: attach
-                        };
-                    }))
+                            return {
+                                name: a.name,
+                                attachment: attach
+                            };
+                        })
+                    );
                     channelData.messages.push({
                         username: msg.author.username,
                         avatar: msg.author.displayAvatarURL(),
@@ -215,8 +221,8 @@ export async function loadChannel(
                                     files: msg.files,
                                     disableMentions: options.disableWebhookMentions
                                 })
-                                .catch((err) => {
-                                    console.log(err.message);
+                                .catch(() => {
+                                    /* Ignore send errors */
                                 });
                             if (msg.pinned && sentMsg) await sentMsg.pin();
                         }

@@ -62,17 +62,18 @@ export async function getRoles(guild: Guild) {
  */
 export async function getEmojis(guild: Guild, options: CreateOptions) {
     const emojis: EmojiData[] = [];
-    guild.emojis.cache.forEach(async (emoji) => {
+    for (const emoji of guild.emojis.cache.array()) {
         const eData: EmojiData = {
             name: emoji.name
         };
         if (options.saveImages && options.saveImages === 'base64') {
-            eData.base64 = (await nodeFetch(emoji.url).then((res) => res.buffer())).toString('base64');
+            const buffer = await nodeFetch(emoji.url).then((res) => res.buffer());
+            eData.base64 = buffer.toString('base64');
         } else {
             eData.url = emoji.url;
         }
         emojis.push(eData);
-    });
+    }
     return emojis;
 }
 
